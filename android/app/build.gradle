@@ -6,6 +6,27 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def configured = true
+try {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} catch (IOException e) {
+    configured = false
+    logger.error('Release signing information not found.')
+}
+
+project.ext {
+    // TODO(YOU): Create release keys and a `keystore.properties` file. See
+    // `example/README.md` for more info and `keystore.example.properties` for an
+    // example.
+    KEYSTORE_STORE_FILE = configured ? rootProject.file(keystoreProperties['storeFile']) : null
+    KEYSTORE_STORE_PASSWORD = keystoreProperties['storePassword']
+    KEYSTORE_KEY_ALIAS = keystoreProperties['keyAlias']
+    KEYSTORE_KEY_PASSWORD = keystoreProperties['keyPassword']
+}
+
+
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
     throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
@@ -26,13 +47,22 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace "com.example.playground"
+    namespace "xyz.nb9.playground"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    signingConfigs {
+        release {
+            storeFile project.KEYSTORE_STORE_FILE
+            storePassword project.KEYSTORE_STORE_PASSWORD
+            keyAlias project.KEYSTORE_KEY_ALIAS
+            keyPassword project.KEYSTORE_KEY_PASSWORD
+        }
     }
 
     kotlinOptions {
@@ -45,20 +75,24 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.playground"
+        applicationId "xyz.nb9.playground"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
-
+    logger.info("defaultConfig: ${defaultConfig}")
     buildTypes {
+
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.release
         }
     }
 }

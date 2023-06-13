@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_meedu_videoplayer/init_meedu_player.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:playground/router.dart';
 
 void main() {
+  initMeeduPlayer(androidUseMediaKit: true);
   runApp(const ProviderScope(child: MyApp()));
 }
 
